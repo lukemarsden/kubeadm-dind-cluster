@@ -300,7 +300,7 @@ function dind::run {
   # need to locate kernel config and among other things
   # they look at /proc/configs.gz (possibly loading configs
   # module for this) and also for /boot/config-*
-  modrobe configs >& /dev/null || true
+  modprobe configs >& /dev/null || true
   # Start the new container.
   new_container=$(docker run \
                          -d --privileged \
