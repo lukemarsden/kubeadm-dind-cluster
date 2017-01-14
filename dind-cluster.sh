@@ -310,6 +310,8 @@ function dind::run {
                          -e USE_OVERLAY=${USE_OVERLAY} \
                          -e HYPERKUBE_IMAGE=k8s.io/hypokube:v1 \
                          -v /boot:/boot \
+                         --add-host="$(hostname):172.17.0.1" \
+                         --add-host="$(hostname).local:172.17.0.1" \
                          -v /lib/modules:/lib/modules \
                          ${opts[@]+"${opts[@]}"} \
                          "${IMAGE_REPO}:${IMAGE_TAG}")
