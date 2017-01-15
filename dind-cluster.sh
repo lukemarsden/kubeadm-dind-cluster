@@ -342,6 +342,18 @@ function dind::bare {
   dind::run "${container_name}"
 }
 
+function dind::quick {
+  local container_name="${1:-}"
+  if [[ ! "${container_name}" ]]; then
+    echo >&2 "Must specify container name"
+    exit 1
+  fi
+  shift
+  run_opts=(${@+"$@"})
+  # assumes no rebuild necc.
+  dind::run "${container_name}"
+}
+
 function dind::init {
   dind::ensure-final-image
   dind::run kube-master 1 127.0.0.1:${APISERVER_PORT}:8080 init "$@"
@@ -495,6 +507,10 @@ case "${1:-}" in
     shift
     dind::bare "$@"
     ;;
+  quick)
+    shift
+    dind::quick "$@"
+    ;;
   e2e)
     shift
     dind::run-e2e "$@"
@@ -511,6 +527,7 @@ case "${1:-}" in
     echo "  $0 init kubeadm-args..." >&2
     echo "  $0 join kubeadm-args..." >&2
     echo "  $0 bare container_name [docker_options...]"
+    echo "  $0 quick container_name [docker_options...]"
     echo "  $0 e2e [test-name-substring]" >&2
     echo "  $0 e2e-serial [test-name-substring]" >&2
     exit 1
