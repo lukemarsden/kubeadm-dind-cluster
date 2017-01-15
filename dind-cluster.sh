@@ -324,6 +324,65 @@ function dind::run {
   fi
 }
 
+function dind::runquick {
+  # FIXME (create several containers)
+  local container_name="${1:-}"
+  local netshift="${2:-}"
+  local portforward="${3:-}"
+  local -a opts=(${run_opts[@]+"${run_opts[@]}"})
+  if [[ $# -gt 3 ]]; then
+    shift 3
+  else
+    shift $#
+  fi
+
+  if [[ ! "${container_name}" ]]; then
+    echo >&2 "Must specify container name"
+    exit 1
+  fi
+
+  # remove any previously created containers with the same name
+  docker rm -vf "${container_name}" 2>/dev/null || true
+
+  if [[ "$portforward" ]]; then
+    opts+=(-p "$portforward")
+  fi
+
+  if [[ "$netshift" ]]; then
+    opts+=(-e DOCKER_NETWORK_OFFSET=0.0.${netshift}.0)
+  fi
+
+  dind::verify-overlay
+  dind::step "Starting DIND container:" "${container_name}"
+  # We mount /boot and /lib/modules into the container
+  # below to make kubeadm preflight checks happy -- they
+  # need to locate kernel config and among other things
+  # they look at /proc/configs.gz (possibly loading configs
+  # module for this) and also for /boot/config-*
+  modprobe configs >& /dev/null || true
+  # Start the new container.
+  new_container=$(docker run \
+                         -d --privileged \
+                         --name "${container_name}" \
+                         --hostname "${container_name}" \
+                         -l kubeadm-dind \
+                         -e USE_OVERLAY=${USE_OVERLAY} \
+                         -e HYPERKUBE_IMAGE=k8s.io/hypokube:v1 \
+                         -v /boot:/boot \
+                         --add-host="$(hostname):172.17.0.1" \
+                         --add-host="$(hostname).local:172.17.0.1" \
+                         -v /lib/modules:/lib/modules \
+                         ${opts[@]+"${opts[@]}"} \
+                         "${IMAGE_REPO}:${IMAGE_TAG}")
+  if [[ "$#" -gt 0 ]]; then
+    dind::step "Running kubeadm:" "$*"
+    # See image/systemd/wrapkubeadm.
+    # Capturing output is necessary to grab flags for 'kubeadm join'
+    kubeadm_output="$(docker exec "${new_container}" wrapkubeadm "$@" 2>&1)"
+    echo >&2 "${kubeadm_output}"
+  fi
+}
+
 function dind::ensure-final-image {
   if ! dind::check-image "${IMAGE_REPO}:${IMAGE_TAG}"; then
     dind::push-binaries
@@ -343,6 +402,7 @@ function dind::bare {
 }
 
 function dind::quick {
+  echo "=== DOING QUICK DIND ==="
   local container_name="${1:-}"
   if [[ ! "${container_name}" ]]; then
     echo >&2 "Must specify container name"
@@ -351,7 +411,7 @@ function dind::quick {
   shift
   run_opts=(${@+"$@"})
   # assumes no rebuild necc.
-  dind::run "${container_name}"
+  dind::runquick "${container_name}"
 }
 
 function dind::init {
