@@ -13,6 +13,18 @@ COPY kubelet.service /lib/systemd/system/
 COPY wrapkubeadm /usr/local/bin
 COPY start_services /usr/local/bin
 
+# From https://github.com/solita/docker-systemd/blob/master/Dockerfile
+# Don't start any optional services except for the few we need.
+RUN find /etc/systemd/system \
+         /lib/systemd/system \
+         -path '*.wants/*' \
+         -not -name '*journald*' \
+         -not -name '*systemd-tmpfiles*' \
+         -not -name '*systemd-user-sessions*' \
+         -exec rm \{} \;
+
+RUN systemctl set-default multi-user.target
+
 VOLUME ["/var/lib/docker2"]
 
 EXPOSE 8080
