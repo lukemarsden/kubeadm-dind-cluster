@@ -352,7 +352,6 @@ function dind::runquick {
     opts+=(-e DOCKER_NETWORK_OFFSET=0.0.${netshift}.0)
   fi
 
-  dind::verify-overlay
   dind::step "Starting DIND container:" "${container_name}"
   # We mount /boot and /lib/modules into the container
   # below to make kubeadm preflight checks happy -- they
