@@ -309,6 +309,7 @@ function dind::run {
                          -l kubeadm-dind \
                          -e USE_OVERLAY=${USE_OVERLAY} \
                          -e HYPERKUBE_IMAGE=k8s.io/hypokube:v1 \
+                         $EXTRA_DOCKER_ARGS \
                          -v /boot:/boot \
                          --add-host="$(hostname):172.17.0.1" \
                          --add-host="$(hostname).local:172.17.0.1" \
