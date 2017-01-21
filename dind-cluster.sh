@@ -302,6 +302,7 @@ function dind::run {
   # module for this) and also for /boot/config-*
   modprobe configs >& /dev/null || true
   # Start the new container.
+  echo "=== Using EXTRA_DOCKER_ARGS=$EXTRA_DOCKER_ARGS"
   new_container=$(docker run \
                          -d --privileged \
                          --name "${container_name}" \
@@ -361,6 +362,7 @@ function dind::runquick {
   # module for this) and also for /boot/config-*
   modprobe configs >& /dev/null || true
   # Start the new container.
+  echo "=== Using EXTRA_DOCKER_ARGS=$EXTRA_DOCKER_ARGS"
   new_container=$(docker run \
                          -d --privileged \
                          --name "${container_name}" \
@@ -368,6 +370,7 @@ function dind::runquick {
                          -l kubeadm-dind \
                          -e USE_OVERLAY=${USE_OVERLAY} \
                          -e HYPERKUBE_IMAGE=k8s.io/hypokube:v1 \
+                         $EXTRA_DOCKER_ARGS \
                          -v /boot:/boot \
                          --add-host="$(hostname):172.17.0.1" \
                          --add-host="$(hostname).local:172.17.0.1" \
