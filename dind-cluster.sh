@@ -372,6 +372,7 @@ function dind::runquick {
                          -e HYPERKUBE_IMAGE=k8s.io/hypokube:v1 \
                          $EXTRA_DOCKER_ARGS \
                          -v /boot:/boot \
+                         -v /tmpfs/$container_name:/var/lib/docker2 \
                          --add-host="$(hostname):172.17.0.1" \
                          --add-host="$(hostname).local:172.17.0.1" \
                          -v /lib/modules:/lib/modules \
